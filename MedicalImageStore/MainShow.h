@@ -31,4 +31,7 @@ public:
 	CEdit file_address;
 	afx_msg void OnTvnSelchangedTreeUser(NMHDR *pNMHDR, LRESULT *pResult);
 	CTreeCtrl m_webTree;
+	afx_msg void OnBnClickedButtonUpload();
+	BOOL UploadFile(LPCTSTR strURL, LPCTSTR strLocalFileName);
+	BOOL Download(const CString& strFileURLInServer, const CString & strFileLocalFullPath);
 };

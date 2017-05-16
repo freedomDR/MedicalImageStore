@@ -1,4 +1,5 @@
 #pragma once
+#include "Container.h"
 class User
 {
 public:
@@ -9,5 +10,8 @@ public:
 	static CString token;
 	static void update();
 	static CString auth_token;
+	static CString storage_url;
+	static Container containers[1000];
+	static int containerLength;
 };
 
