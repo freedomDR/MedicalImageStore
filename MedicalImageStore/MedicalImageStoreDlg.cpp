@@ -29,6 +29,7 @@ void CMedicalImageStoreDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EDIT_USER, user_name);
 	DDX_Control(pDX, IDC_EDIT_PASS, pass_word);
+	DDX_Control(pDX, IDC_EDIT1, user_group);
 }
 
 BEGIN_MESSAGE_MAP(CMedicalImageStoreDlg, CDialogEx)
@@ -99,8 +100,10 @@ void CMedicalImageStoreDlg::OnBnClickedOk()
 	user_name.GetWindowTextW(userName);
 	CString passWord;
 	pass_word.GetWindowTextW(passWord);
+	CString userGroup;
+	user_group.GetWindowTextW(userGroup);
 
-	DWORD status = LoginJudge::judge(userName, passWord);
+	DWORD status = LoginJudge::judge(userGroup,userName, passWord);
 
 	if (status == HTTP_STATUS_OK)
 	{

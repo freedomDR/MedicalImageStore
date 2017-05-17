@@ -30,6 +30,7 @@ void CMainShow::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATI_USER_NAME, user_name);
 	DDX_Control(pDX, IDC_EDIT_FILE_ADDRESS, file_address);
 	DDX_Control(pDX, IDC_TREE_USER, m_webTree);
+	DDX_Control(pDX, IDC_EDIT1, show_info);
 }
 
 BOOL CMainShow::OnInitDialog()
@@ -57,58 +58,20 @@ BOOL CMainShow::OnInitDialog()
 	//m_webTree.SetImageList(&m_imageList, TVSIL_NORMAL);
 
 	// 插入根节点   
-	hRoot = m_webTree.InsertItem(_T("account"), 0, 0);
+	hRoot = m_webTree.InsertItem(User::user_name, 0, 0);
 	// 在根节点下插入子节点   
-	hCataItem = m_webTree.InsertItem(_T("container1"), 1, 1, hRoot, TVI_LAST);
-	// 为“IT互联网”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hCataItem, 1);
-	// 在“IT互联网”节点下插入子节点   
-	hArtItem = m_webTree.InsertItem(_T("container2"), 2, 2, hCataItem, TVI_LAST);
-	// 为“百度文章1”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hArtItem, 2);
-	// 在“IT互联网”节点下插入另一子节点   
-	hArtItem = m_webTree.InsertItem(_T("container3"), 2, 2, hCataItem, TVI_LAST);
-	// 为“谷歌文章2”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hArtItem, 3);
-	// 在根节点下插入第二个子节点   
-	hCataItem = m_webTree.InsertItem(_T("container2"), 1, 1, hRoot, TVI_LAST);
-	// 为“数码生活”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hCataItem, 4);
-	// 在“数码生活”节点下插入子节点   
-	hArtItem = m_webTree.InsertItem(_T("智能手机文章1"), 2, 2, hCataItem, TVI_LAST);
-	// 为“智能手机文章1”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hArtItem, 5);
-	// 在“数码生活”节点下插入另一子节点   
-	hArtItem = m_webTree.InsertItem(_T("平板电脑文章2"), 2, 2, hCataItem, TVI_LAST);
-	// 为“平板电脑文章2”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hArtItem, 6);
-	// 在根节点下插入第三个子节点   
-	hCataItem = m_webTree.InsertItem(_T("container3"), 1, 1, hRoot, TVI_LAST);
-	// 为“软件开发”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hCataItem, 7);
-	// 在“软件开发”节点下插入子节点   
-	hArtItem = m_webTree.InsertItem(_T("C++编程入门系列1"), 2, 2, hCataItem, TVI_LAST);
-	// 为“C++编程入门系列1”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hArtItem, 8);
-	// 在“软件开发”节点下插入另一子节点   
-	hArtItem = m_webTree.InsertItem(_T("VS2010/MFC编程入门2"), 2, 2, hCataItem, TVI_LAST);
-	// 为“VS2010/MFC编程入门2”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hArtItem, 9);
-	// 在根节点下插入第四个子节点   
-	hCataItem = m_webTree.InsertItem(_T("container4"), 1, 1, hRoot, TVI_LAST);
-	// 为“娱乐休闲”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hCataItem, 10);
-	// 在“娱乐休闲”节点下插入子节点   
-	hArtItem = m_webTree.InsertItem(_T("玛雅文明文章1"), 2, 2, hCataItem, TVI_LAST);
-	// 为“玛雅文明文章1”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hArtItem, 11);
-	// 在“娱乐休闲”节点下插入另一子节点   
-	hArtItem = m_webTree.InsertItem(_T("IT笑话2"), 2, 2, hCataItem, TVI_LAST);
-	// 为“IT笑话2”节点添加附加的编号数据，在鼠标划过该节点时显示   
-	m_webTree.SetItemData(hArtItem, 12);
-
+	for (int i = 0; i < User::containerLength; i++)
+	{
+		hCataItem = m_webTree.InsertItem(User::containers[i].name, 1, 1, hRoot, TVI_LAST);
+		for (int j = 0; j < User::containers[i].length; j++)
+		{
+			if(User::containers[i].swiftObject[j]->name != L"")
+				m_webTree.InsertItem(User::containers[i].swiftObject[j]->name, 2, 2, hCataItem, TVI_LAST);
+		}
+	}
+	   
 	user_name.SetWindowTextW(User::user_name);
-
+	show_info.SetWindowTextW(User::headInfo);
 	SwiftTools::Test();
 	return 0;
 }

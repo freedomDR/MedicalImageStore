@@ -51,6 +51,12 @@
     <ClInclude Include="Container.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="json\json.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="json\json-forwards.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MedicalImageStore.cpp">
@@ -78,6 +84,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Container.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="jsoncpp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

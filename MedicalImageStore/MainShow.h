@@ -34,4 +34,5 @@ public:
 	afx_msg void OnBnClickedButtonUpload();
 	BOOL UploadFile(LPCTSTR strURL, LPCTSTR strLocalFileName);
 	BOOL Download(const CString& strFileURLInServer, const CString & strFileLocalFullPath);
+	CEdit show_info;
 };
