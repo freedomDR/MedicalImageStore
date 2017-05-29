@@ -17,5 +17,7 @@ public:
 	static Container containers[1000];
 	static int containerLength;
 	static CString headInfo;
+	static CString selectContainerName;
+	static int selectContainerId;
 };
 

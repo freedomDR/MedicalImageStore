@@ -35,4 +35,8 @@ public:
 	BOOL UploadFile(LPCTSTR strURL, LPCTSTR strLocalFileName);
 	BOOL Download(const CString& strFileURLInServer, const CString & strFileLocalFullPath);
 	CEdit show_info;
+	afx_msg void OnBnClickedDownload();
+	CString selectFileFolder();
+	CString downloadFileName;
+	CString downloadFileContainerName;
 };

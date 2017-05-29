@@ -63,10 +63,14 @@ BOOL CMainShow::OnInitDialog()
 	for (int i = 0; i < User::containerLength; i++)
 	{
 		hCataItem = m_webTree.InsertItem(User::containers[i].name, 1, 1, hRoot, TVI_LAST);
+		m_webTree.SetItemData(hCataItem, i);
 		for (int j = 0; j < User::containers[i].length; j++)
 		{
-			if(User::containers[i].swiftObject[j]->name != L"")
-				m_webTree.InsertItem(User::containers[i].swiftObject[j]->name, 2, 2, hCataItem, TVI_LAST);
+			if (User::containers[i].swiftObject[j]->name != L"")
+			{
+				hArtItem = m_webTree.InsertItem(User::containers[i].swiftObject[j]->name, 2, 2, hCataItem, TVI_LAST);
+				m_webTree.SetItemData(hArtItem, j);
+			}
 		}
 	}
 	   
@@ -84,6 +88,7 @@ ON_EN_CHANGE(IDC_EDIT_FILE_ADDRESS, &CMainShow::OnEnChangeEdit1)
 ON_BN_CLICKED(IDC_BUTTON_OPEN_FILE, &CMainShow::OnBnClickedButtonOpenFile)
 ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_USER, &CMainShow::OnTvnSelchangedTreeUser)
 ON_BN_CLICKED(IDC_BUTTON_UPLOAD, &CMainShow::OnBnClickedButtonUpload)
+ON_BN_CLICKED(IDC_Download, &CMainShow::OnBnClickedDownload)
 END_MESSAGE_MAP()
 
 
@@ -138,6 +143,26 @@ void CMainShow::OnTvnSelchangedTreeUser(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMTREEVIEW pNMTreeView = reinterpret_cast<LPNMTREEVIEW>(pNMHDR);
 	// TODO: 在此添加控件通知处理程序代码
+	HTREEITEM hItem = m_webTree.GetSelectedItem();
+	CString value;
+	value = m_webTree.GetItemText(hItem);
+	User::selectContainerName = value;
+	int pos = m_webTree.GetItemData(hItem);
+	if (User::user_name == value)
+	{
+		show_info.SetWindowTextW(User::headInfo);
+	}
+	else if (User::containers[pos].name == value) 
+	{
+		show_info.SetWindowTextW(User::containers[pos].headInfo);
+		User::selectContainerId = pos;
+	}
+	else if (User::containers[User::selectContainerId].swiftObject[pos]->name == value)
+	{
+		show_info.SetWindowTextW(User::containers[User::selectContainerId].swiftObject[pos]->headInfo);
+		downloadFileName = User::containers[User::selectContainerId].swiftObject[pos]->name;
+		downloadFileContainerName = User::containers[User::selectContainerId].name;
+	}
 	*pResult = 0;
 }
 
@@ -154,7 +179,7 @@ void CMainShow::OnBnClickedButtonUpload()
 		file_name = result;
 		result = filename.Tokenize(L"\\", start);
 	}
-	UploadFile(User::storage_url+L"/DR/"+file_name, filename);
+	UploadFile(User::storage_url+L"/"+User::selectContainerName+"/"+file_name, filename);
 }
 
 
@@ -256,6 +281,7 @@ BOOL CMainShow::Download(const CString& strFileURLInServer, //待下载文件的URL
 		AfxParseURL(strFileURLInServer, dwType, strServer, strObject, wPort);
 		pHttpConnection = session.GetHttpConnection(strServer, wPort);
 		pHttpFile = pHttpConnection->OpenRequest(CHttpConnection::HTTP_VERB_GET, strObject);
+		pHttpFile->AddRequestHeaders(L"X-Auth-Token: " + User::auth_token);
 		if (pHttpFile->SendRequest() == FALSE)
 			return false;
 		DWORD dwStateCode;
@@ -340,4 +366,41 @@ BOOL CMainShow::Download(const CString& strFileURLInServer, //待下载文件的URL
 		pHttpConnection->Close();
 	session.Close();
 	return true;
+}
+
+void CMainShow::OnBnClickedDownload()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString download_path = selectFileFolder();
+	Download(User::storage_url + L"/" + downloadFileContainerName + "/" + downloadFileName, download_path+"/"+ downloadFileName);
+}
+
+CString CMainShow::selectFileFolder()
+{
+	TCHAR           szFolderPath[MAX_PATH] = { 0 };
+	CString         strFolderPath = TEXT("");
+
+	BROWSEINFO      sInfo;
+	::ZeroMemory(&sInfo, sizeof(BROWSEINFO));
+	sInfo.pidlRoot = 0;
+	sInfo.lpszTitle = _T("请选择一个文件夹：");
+	sInfo.ulFlags = BIF_DONTGOBELOWDOMAIN | BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE | BIF_EDITBOX;
+	sInfo.lpfn = NULL;
+
+	// 显示文件夹选择对话框  
+	LPITEMIDLIST lpidlBrowse = ::SHBrowseForFolder(&sInfo);
+	if (lpidlBrowse != NULL)
+	{
+		// 取得文件夹名  
+		if (::SHGetPathFromIDList(lpidlBrowse, szFolderPath))
+		{
+			strFolderPath = szFolderPath;
+		}
+	}
+	if (lpidlBrowse != NULL)
+	{
+		::CoTaskMemFree(lpidlBrowse);
+	}
+
+	return strFolderPath;
 }

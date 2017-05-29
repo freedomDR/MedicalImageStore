@@ -65,5 +65,7 @@ CString User::pass_word;
 CString User::auth_token;
 CString User::storage_url;
 CString User::headInfo;
+CString User::selectContainerName;
+int User::selectContainerId;
 int User::containerLength = 0;
 Container User::containers[1000];

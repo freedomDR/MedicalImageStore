@@ -8,7 +8,7 @@ public:
 	CString name;
 	int length;
 	SwiftObject* swiftObject[1000];
-	static CString container_name;
+	//static CString container_name;
 	static void getAllContainer();
 	CString headInfo;
 };
