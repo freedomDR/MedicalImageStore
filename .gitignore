@@ -243,3 +243,6 @@ ModelManifest.xml
 .fake/
 ./*.VC.db
 MedicalImageStore.VC.db
+
+#DCM file
+*.dcm
