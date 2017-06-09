@@ -13,11 +13,11 @@ SwiftObject::~SwiftObject()
 {
 }
 
-void SwiftObject::getAllObject(CString container_name, int poss)
+void SwiftObject::getAllObject(CString& container_name, int poss)
 {
 	CInternetSession session;
 	CHttpConnection * conn = session.GetHttpConnection(SwiftTools::server, (INTERNET_PORT)SwiftTools::port);
-	CHttpFile* file = conn->OpenRequest(CHttpConnection::HTTP_VERB_GET, L"v1/AUTH_" + User::user_name + "/"+container_name+ L"?format=json");
+	CHttpFile* file = conn->OpenRequest(CHttpConnection::HTTP_VERB_GET, L"v1/AUTH_" + User::user_name + L"/"+container_name+L"?format=json",NULL,1,NULL,NULL, INTERNET_FLAG_RELOAD| INTERNET_FLAG_DONT_CACHE);
 	file->AddRequestHeaders(L"X-Auth-Token: " + User::auth_token);
 	file->SendRequest();
 	DWORD status;
@@ -68,4 +68,6 @@ void SwiftObject::getAllObject(CString container_name, int poss)
 	file->Close();
 	conn->Close();
 	session.Close();
+	delete file;
+	delete conn;
 }

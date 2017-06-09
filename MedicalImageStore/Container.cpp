@@ -17,7 +17,7 @@ void Container::getAllContainer()
 {
 	CInternetSession session;
 	CHttpConnection * conn = session.GetHttpConnection(SwiftTools::server, (INTERNET_PORT)SwiftTools::port);
-	CHttpFile* file = conn->OpenRequest(CHttpConnection::HTTP_VERB_GET, L"v1/AUTH_" + User::user_name + L"?format=json");
+	CHttpFile* file = conn->OpenRequest(CHttpConnection::HTTP_VERB_GET, L"v1/AUTH_" + User::user_name + L"?format=json", NULL, 1, NULL, NULL, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE);
 	file->AddRequestHeaders(L"X-Auth-Token: " + User::auth_token);
 	file->SendRequest();
 	DWORD status;
@@ -60,11 +60,16 @@ void Container::getAllContainer()
 			for (int i = 0; i < len; i++)
 			{
 				User::containers[i].name = root[i]["name"].asCString();
-				SwiftObject::getAllObject(User::containers[i].name, i);
 			}
 		}
 	}
 	file->Close();
 	conn->Close();
 	session.Close();
+	delete file;
+	delete conn;
+	for (int i = 0; i < User::containerLength; i++)
+	{
+		//SwiftObject::getAllObject(User::containers[i].name, i);
+	}
 }

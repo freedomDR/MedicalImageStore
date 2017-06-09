@@ -1,8 +1,16 @@
 #pragma once
 #include "afxwin.h"
 #include "afxcmn.h"
-
-
+#include "stdafx.h"
+#include <vtkSmartPointer.h>
+#include <vtkImageViewer2.h>
+#include <vtkDICOMImageReader.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkRenderer.h>
+#include <vtkAutoInit.h>
+VTK_MODULE_INIT(vtkRenderingOpenGL2);
+VTK_MODULE_INIT(vtkInteractionStyle);
 // CMainShow ¶Ô»°¿ò
 
 class CMainShow : public CDialogEx
@@ -39,4 +47,13 @@ public:
 	CString selectFileFolder();
 	CString downloadFileName;
 	CString downloadFileContainerName;
+	CStatic DCM_show;
+	int picture_x;
+	int picture_y;
+	vtkSmartPointer<vtkDICOMImageReader> reader;
+	vtkSmartPointer<vtkImageViewer2> imageViewer;
+	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor;
+
+	void ShowDcm(CString& filename);
+
 };

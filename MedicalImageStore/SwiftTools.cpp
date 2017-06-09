@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "SwiftTools.h"
+#include "User.h"
 
 
 SwiftTools::SwiftTools()
@@ -13,22 +14,13 @@ SwiftTools::~SwiftTools()
 
 void SwiftTools::Test()
 {
-	CInternetSession mySession;
-	CString mid;
-	mid.Format(L"%s", "www.baidu.com");
-
-	//CHttpConnection *conn = mySession.GetHttpConnection(TEXT("192.168.108.128"),(INTERNET_PORT)8088);
-	CHttpConnection *conn = mySession.GetHttpConnection(server, (INTERNET_PORT)port);
-	CHttpFile *pFile = conn->OpenRequest(CHttpConnection::HTTP_VERB_GET,TEXT("/auth/v1.0"));
-	pFile->AddRequestHeaders(L"X-Storage-User: test:tester");
-	pFile->AddRequestHeaders(L"X-Storage-Pass: testing");
-	
-	//CHttpFile *pFile = conn->OpenRequest(CHttpConnection::HTTP_VERB_GET, TEXT("/info"));
-	
-	BOOL flag = pFile->SendRequest();
-	
+	CInternetSession session;
+	CHttpConnection * conn = session.GetHttpConnection(SwiftTools::server, (INTERNET_PORT)SwiftTools::port);
+	CHttpFile* file = conn->OpenRequest(CHttpConnection::HTTP_VERB_GET, TEXT("v1/AUTH_test/DR?format=json"));
+	file->AddRequestHeaders(L"X-Auth-Token: " + User::auth_token);
+	file->SendRequest();
 	DWORD dwRet;
-	pFile->QueryInfoStatusCode(dwRet);
+	file->QueryInfoStatusCode(dwRet);
 
 	if (dwRet != HTTP_STATUS_OK)
 	{
@@ -38,7 +30,7 @@ void SwiftTools::Test()
 	}
 	else
 	{
-		int len = pFile->GetLength();
+		int len = file->GetLength();
 		char buf[2000];
 		int numread;
 		CString filepath;
@@ -50,7 +42,7 @@ void SwiftTools::Test()
 		//CString mid;
 		//while ((numread = pFile->Read(buf, sizeof(buf) - 1)) > 0)
 		char buff[5000];
-		while((numread = pFile->Read(buff,4000)) > 0)
+		while((numread = file->Read(buff,4000)) > 0)
 		{
 			//buf[numread] = '\0';
 			buff[numread] = '\0';
@@ -61,9 +53,9 @@ void SwiftTools::Test()
 		myfile.Close();
 	}
 
-	mySession.Close();
-	pFile->Close();
-	delete pFile;
+	session.Close();
+	file->Close();
+	delete file;
 }
 
 

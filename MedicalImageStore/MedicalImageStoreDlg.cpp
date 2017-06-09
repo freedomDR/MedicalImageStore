@@ -111,6 +111,11 @@ void CMedicalImageStoreDlg::OnBnClickedOk()
 		CMainShow mainShow;
 		mainShow.DoModal();
 		this->ShowWindow(SW_SHOW);
+		//::SendMessage(this->GetSafeHwnd(), WM_CLOSE, NULL, NULL);
+	}
+	else
+	{
+		MessageBox(L"ÕËºÅ»òÃÜÂë´íÎó");
 	}
 }
 

@@ -3,11 +3,20 @@
 
 #include "stdafx.h"
 #include "MedicalImageStore.h"
+#include "MedicalImageStoreDlg.h"
 #include "MainShow.h"
 #include "SwiftTools.h"
 #include "afxdialogex.h"
 #include "LoginJudge.h"
 #include "User.h"
+#include <vtkSmartPointer.h>
+#include <vtkImageViewer2.h>
+#include <vtkDICOMImageReader.h>
+#include <vtkRenderWindow.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkRenderer.h>
+#include <vtkAutoInit.h>
+
 
 
 // CMainShow 对话框
@@ -30,7 +39,8 @@ void CMainShow::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATI_USER_NAME, user_name);
 	DDX_Control(pDX, IDC_EDIT_FILE_ADDRESS, file_address);
 	DDX_Control(pDX, IDC_TREE_USER, m_webTree);
-	DDX_Control(pDX, IDC_EDIT1, show_info);
+	//DDX_Control(pDX, IDC_EDIT1, show_info);
+	DDX_Control(pDX, IDC_PICTURE, DCM_show);
 }
 
 BOOL CMainShow::OnInitDialog()
@@ -40,7 +50,11 @@ BOOL CMainShow::OnInitDialog()
 	HTREEITEM hRoot;     // 树的根节点的句柄   
 	HTREEITEM hCataItem; // 可表示任一分类节点的句柄   
 	HTREEITEM hArtItem;  // 可表示任一文章节点的句柄   
-
+	CRect rc;
+	CWnd *pWnd = GetDlgItem(IDC_PICTURE);//IDC_PIC_2D为控件ID
+	pWnd->GetClientRect(&rc);//rc为控件的大小。
+	picture_x = rc.Height();
+	picture_y = rc.Width();
 						 // 加载三个图标，并将它们的句柄保存到数组   
 	//hIcon[0] = theApp.LoadIcon(IDI_WEB_ICON);
 	//hIcon[1] = theApp.LoadIcon(IDI_CATALOG_ICON);
@@ -56,6 +70,11 @@ BOOL CMainShow::OnInitDialog()
 
 	// 为树形控件设置图像序列   
 	//m_webTree.SetImageList(&m_imageList, TVSIL_NORMAL);
+
+	for (int i = 0; i < User::containerLength; i++)
+	{
+		SwiftObject::getAllObject(User::containers[i].name, i);
+	}
 
 	// 插入根节点   
 	hRoot = m_webTree.InsertItem(User::user_name, 0, 0);
@@ -75,8 +94,11 @@ BOOL CMainShow::OnInitDialog()
 	}
 	   
 	user_name.SetWindowTextW(User::user_name);
-	show_info.SetWindowTextW(User::headInfo);
-	SwiftTools::Test();
+	//show_info.SetWindowTextW(User::headInfo);
+	//SwiftTools::Test();
+	reader = vtkSmartPointer<vtkDICOMImageReader>::New();
+	imageViewer = vtkSmartPointer<vtkImageViewer2>::New();
+	renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
 	return 0;
 }
 
@@ -98,6 +120,13 @@ END_MESSAGE_MAP()
 void CMainShow::OnBnClickedCancel()
 {
 	// TODO: 在此添加控件通知处理程序代码
+	/*
+	this->ShowWindow(SW_HIDE);
+	CMedicalImageStoreDlg dlg;
+	dlg.DoModal();
+	this->ShowWindow(SW_SHOW);
+	::SendMessage(this->GetSafeHwnd(), WM_CLOSE, NULL, NULL);
+	*/
 	CDialogEx::OnCancel();
 }
 
@@ -150,18 +179,21 @@ void CMainShow::OnTvnSelchangedTreeUser(NMHDR *pNMHDR, LRESULT *pResult)
 	int pos = m_webTree.GetItemData(hItem);
 	if (User::user_name == value)
 	{
-		show_info.SetWindowTextW(User::headInfo);
+		//show_info.SetWindowTextW(User::headInfo);
 	}
 	else if (User::containers[pos].name == value) 
 	{
-		show_info.SetWindowTextW(User::containers[pos].headInfo);
+		//show_info.SetWindowTextW(User::containers[pos].headInfo);
 		User::selectContainerId = pos;
 	}
 	else if (User::containers[User::selectContainerId].swiftObject[pos]->name == value)
 	{
-		show_info.SetWindowTextW(User::containers[User::selectContainerId].swiftObject[pos]->headInfo);
+		//show_info.SetWindowTextW(User::containers[User::selectContainerId].swiftObject[pos]->headInfo);
 		downloadFileName = User::containers[User::selectContainerId].swiftObject[pos]->name;
 		downloadFileContainerName = User::containers[User::selectContainerId].name;
+		Download(User::storage_url + L"\\" + downloadFileContainerName + "\\" + downloadFileName, L"./" + downloadFileName);
+		CString mid = L"C:\\Users\\orange\\Desktop\\dongruotest\\3b_mpr_pr_hf_vfh.3.dcm";
+		ShowDcm(L"./" + downloadFileName);
 	}
 	*pResult = 0;
 }
@@ -179,7 +211,17 @@ void CMainShow::OnBnClickedButtonUpload()
 		file_name = result;
 		result = filename.Tokenize(L"\\", start);
 	}
-	UploadFile(User::storage_url+L"/"+User::selectContainerName+"/"+file_name, filename);
+	BOOL uti_result = UploadFile(User::storage_url+L"/"+User::selectContainerName+"/"+file_name, filename);
+	if (uti_result == true)
+	{
+		MessageBox(L"success");
+		HTREEITEM mid = m_webTree.GetSelectedItem();
+		m_webTree.InsertItem(file_name, 2, 2, mid, TVI_LAST);
+	}
+	else
+	{
+		MessageBox(L"faile");
+	}
 }
 
 
@@ -215,7 +257,7 @@ BOOL CMainShow::UploadFile(LPCTSTR strURL, //负责接收上传操作的页面的URL
 		cis.SetOption(INTERNET_OPTION_CONNECT_TIMEOUT, nTimeOut); //联接超时设置
 		cis.SetOption(INTERNET_OPTION_CONNECT_RETRIES, 1);  //重试1次
 		pHC = cis.GetHttpConnection(strServer, wPort);  //取得一个Http联接
-		pHF = pHC->OpenRequest(CHttpConnection::HTTP_VERB_PUT, strObject);
+		pHF = pHC->OpenRequest(CHttpConnection::HTTP_VERB_PUT, strObject, NULL, 1, NULL, NULL, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE);
 		pHF->AddRequestHeaders(L"X-Auth-Token: " + User::auth_token);
 		if (!pHF->SendRequest(NULL, 0, pFileBuff, dwFileLength))
 		{
@@ -280,7 +322,7 @@ BOOL CMainShow::Download(const CString& strFileURLInServer, //待下载文件的URL
 	{
 		AfxParseURL(strFileURLInServer, dwType, strServer, strObject, wPort);
 		pHttpConnection = session.GetHttpConnection(strServer, wPort);
-		pHttpFile = pHttpConnection->OpenRequest(CHttpConnection::HTTP_VERB_GET, strObject);
+		pHttpFile = pHttpConnection->OpenRequest(CHttpConnection::HTTP_VERB_GET, strObject, NULL, 1, NULL, NULL, INTERNET_FLAG_RELOAD | INTERNET_FLAG_DONT_CACHE);
 		pHttpFile->AddRequestHeaders(L"X-Auth-Token: " + User::auth_token);
 		if (pHttpFile->SendRequest() == FALSE)
 			return false;
@@ -372,7 +414,15 @@ void CMainShow::OnBnClickedDownload()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	CString download_path = selectFileFolder();
-	Download(User::storage_url + L"/" + downloadFileContainerName + "/" + downloadFileName, download_path+"/"+ downloadFileName);
+	BOOL utl_result = Download(User::storage_url + L"\\" + downloadFileContainerName + L"\\" + downloadFileName, download_path+"/"+ downloadFileName);
+	if (utl_result == true)
+	{
+		MessageBox(L"success");
+	}
+	else
+	{
+		MessageBox(L"faile");
+	}
 }
 
 CString CMainShow::selectFileFolder()
@@ -403,4 +453,27 @@ CString CMainShow::selectFileFolder()
 	}
 
 	return strFolderPath;
+}
+
+void CMainShow::ShowDcm(CString & filename)
+{
+	USES_CONVERSION;
+	char *nstringa = W2A(filename);
+	
+	reader->SetFileName(nstringa);
+	reader->Update();
+
+	
+	imageViewer->SetParentId(DCM_show.GetSafeHwnd());
+	
+	imageViewer->SetSize(picture_x, picture_y);
+	imageViewer->SetInputConnection(reader->GetOutputPort());
+	
+
+	imageViewer->SetupInteractor(renderWindowInteractor);
+	imageViewer->Render();
+	imageViewer->GetRenderer()->ResetCamera();
+	imageViewer->Render();
+
+	renderWindowInteractor->Start();
 }
